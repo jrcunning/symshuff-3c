@@ -1,11 +1,61 @@
 ---
-title: Symbiont shuffling linked to differential photochemical efficiency of *Symbiodinium* in three Caribbean reef corals
+title: Symbiont shuffling linked to differential photochemical dynamics of *Symbiodinium* in three Caribbean reef corals
 author: "Ross Cunning"
 date: "6/7/2017"
 output: html_document
 ---
 
-Title ideas:
+```{r load_analysis}
+load("../analysis/analysis.RData")
 
-Symbiont shuffling linked to differential photochemical efficiency of *Symbiodinium* in three Caribbean reef corals
+
+ncolsperspp <- with(bleach3c, aggregate(Colony ~ Species, 
+                                        FUN=function(x) length(unique(x))))
+nOfavcol <- ncolsperspp[1, 2]
+nSsidcol <- ncolsperspp[2, 2]
+nMcavcol <- ncolsperspp[3, 2]
+
+ncorepercol <- with(bleach3c, table(Species, Colony))
+ncorepercol[ncorepercol==0] <- NA
+rangeOfav <- range(ncorepercol[1, ], na.rm=T)
+rangeSsid <- range(ncorepercol[2, ], na.rm=T)
+rangeMcav <- range(ncorepercol[3, ], na.rm=T)
+
+ncoreperspp <- with(bleach3c, table(Species))
+nOfavcore <- ncoreperspp["Of"]
+nSsidcore <- ncoreperspp["Ss"]
+nMcavcore <- ncoreperspp["Mc"]
+
+```
+
+# Abstract
+
+# Introduction
+
+# Materials and Methods
+
+### Experimental manipulations
+
+Two separate bleaching and recovery experiments were conducted. The first experiment included both *O. faveolata* (`r nOfavcol` colonies, `r min(rangeOfav)`-`r max(rangeOfav)` cores colony^-1^, n=`r nOfavcore` cores) and *S. siderea* (`r nSsidcol` colonies, `r min(rangeSsid)`-`r max(rangeSsid)` cores colony^-1^, n=`r nSsidcore` cores), with bleaching treaments of exposure to 32°C for 7, 10, and 14 days [@Cunning:2015ja], and recovery for 3 months at 24 or 29°C. The second experiment was conducted on *M. cavernosa* (`r nMcavcol` colonies, `r min(rangeMcav)`-`r max(rangeMcav)` cores colony^-1^, n=`r nMcavcore` cores), with a bleaching treatment of 32°C for 10 days [@Silverstein:2015er] and recovery for 3 months at 24 or 29°C. Prior to experimentation, the *O. faveolata* cores contained varying mixtures of *Symbiodinium* in clades B and D [@Cunning:2015ja], while *S. siderea* colonies contained mixtures of clades C and D [@Cunning:2013tl]. *M. cavernosa* contained only clade C *Symbiodinium* upon collection, but an initial bleaching and recovery experiment involving some of these cores produced a range of mixtures of clades C and D [@Silverstein:2015er]. Both experiments were conducted in the same indoor, semi-recirculating coral culture facility at the University of Miami. For additional details on coral collection and experimental set-up, see @Silverstein:2015er and @Cunning:2015ja.
+
+### Sampling and data collection
+
+In both experiments, maximum photochemical efficiency (*F~v~/F~m~*) of *Symbiodinium* within each coral core was measured prior to heat stress and at the end of the heat stress treatment using an Imaging PAM (Walz, Effeltrich, Germany). At the same time points, small biopsies were taken from each core for genomic DNA extraction and quantification of the relative abundance of *Symbiodinium* clades using qPCR. Tissue samples were collected again after 3 months of recovery from bleaching to analyze changes in *Symbiodinium* community structure (i.e., symbiont shuffling). For additional details on sample collection and processing, see @Silverstein:2015er and @Cunning:2015ja.
+
+### Data analysis
+
+Photochemical efficiency (*F~v~/F~m~*) was analyzed by a linear mixed model (*lmer*; [@Bates:2015wh]) with fixed effects of time (pre- or post-heat-stress), proportion clade D (measured at the same time point), and coral species, and with random intercepts for each colony. Backward elimination of non-significant effects from a fully crossed model was performed using partial F-tests in *lmerTest* [@lmerTestTestsinL:j0go4ZGL]. Regression coefficients for the proportion clade D were interpreted as the photochemical advantage of clade D for each species under ambient (pre-heat-stress; A^D^~Amb~) and heated (post-heat-stress; A^D^~Heat~) conditions, and tested for statistical differences by pairwise comparisons in *lsmeans* [@Lenth:2015vl]. Days of heat stress was not included as a predictor of *F~v~/F~m~*, since analysis of corals in the first experiment indicated it had no impact on the photochemical advantage of clade D (i.e., no significant interaction between stress duration and proportion clade D).
+
+Symbiont shuffling was analyzed by modeling the final proportion of clade D (after 3 months of recovery) as a function of the initial proportion clade D (before bleaching), using a quasi-binomial generalized linear model (GLM) with species, bleaching duration, and recovery temperature as co-predictors. Fitted values for the final proportion of clade D for each species at each bleaching duration (averaged across recovery temperatures, and predicted for *M. cavernosa* at 7- and 14-day durations using the *effects* package [@Fox:2003uu]), were plotted against initial proportion of clade D with 90% confidence intervals. From these fitted values, an integrated metric of symbiont shuffling was generated across the full range of initial clade D proportions by finding the area between the fitted curve for each group and the 45° line of identity, which indicates no change in symbiont proportions. This metric was scaled to a range of -1 (e.g., complete loss of clade D) to +1 (e.g., complete dominance by clade D), with zero indicating no symbiont shuffling.
+
+Finally, a link between the differential performance of symbionts and symbiont shuffling was investigated by modeling (with a quasi-binomial GLM) the integrated symbiont shuffling metric as a function of the photochemical advantage of clade D under heat stress (A^D^~Heat~) for each species, and days of exposure to heat stress. All data analysis was conducted using R v3.3.1 [@RALanguageandEn:2014wf]. Data and R code to reproduce all analyses and figures presented here are available at: github.com/jrcunning/symshuff-3c.
+
+# Results
+
+# Discussion
+
+# Acknowledgements
+
+# References
+
 
