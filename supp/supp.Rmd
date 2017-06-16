@@ -31,13 +31,10 @@ addpoly <- function(x, y1, y2, col=alpha("lightgrey", 0.8), ...){
 
 # Import data
 ```{r load_data}
+# Load all data from file
 alldata <- read.csv("data/master.csv")
 alldata <- alldata[-360, ]  # Remove duplicate Mc9_2 entry with incorrect Fv/Fm recov2 value
 alldata$Species <- factor(alldata$Species, levels=c("Of", "Ss", "Mc"))
-```
-
-# Analyze Fv/Fm using the repeat bleaching data for *M. cavernosa*
-```{r}
 
 # Get data frame with all Ofav and Ssid data
 SsOf <- subset(alldata, Species!="Mc")
@@ -61,76 +58,7 @@ Mc$MaxY.recov <- Mc$MaxY.recov2
 # Merge data from all three coral species together
 bleach3c <- rbind(SsOf, Mc)[, c("Species", "Colony", "Core", "Total.init", "PropD.init", "MaxY.init", "BleachLvl", "Total.bleach", "PropD.bleach", "MaxY.bleach")]
 bleach3c <- droplevels(bleach3c)
-```
 
-### Initial Fv/Fm before stress
-```{r MaxY.init.3c, fig.width=7, fig.height=4}
-
-# Plot Fv/Fm vs. PropD by Species
-xyplot(MaxY.init ~ PropD.init | Species, bleach3c, 
-       main="Initial Fv/Fm by species",
-       xlab="Initial proportion clade D", ylab="Initial Fv/Fm")  
-
-# Fit mixed model with fixed effects of Species and proportion clade D
-maxyinit.m <- lmer(MaxY.init ~ PropD.init * Species + (1|Colony),
-                   data=bleach3c) 
-anova(maxyinit.m)  # Assess significance of Species
-
-# Calculate mean Fv/Fm for each species at PropD=0 w/ pairwise comparisons
-maxyinit.lsm <- lsmeans(maxyinit.m, "Species", 
-                        at=list(PropD.init=0))  
-cld(maxyinit.lsm) # View lsmean comparisons
-plot(maxyinit.lsm, main="Initial Fv/Fm with no clade D", horizontal=F)
-
-# Effect of proportion clade D on initial Fv/Fm
-maxyinit.m.lst <- lstrends(maxyinit.m, specs="Species", var="PropD.init")
-cld(maxyinit.m.lst) # Slopes of fit for each species
-plot(Effect(c("PropD.init", "Species"), maxyinit.m))  # Plot model fit
-
-# Difference in Fv/Fm with 100% clade D?
-maxyinit.lsm <- lsmeans(maxyinit.m, "Species", at=list(PropD.init=1))
-cld(maxyinit.lsm)
-plot(maxyinit.lsm, main="Initial Fv/Fm with 100% clade D", horizontal=F)
-```
-
-* Higher amounts of clade D #d95f02uce Fv/Fm, with this effect being stronger in *O. faveolata* compa#d95f02 to *S. siderea* and *M. cavernosa*. Fv/Fm with 100% D is lower in *M. cavernosa* than the other two species.
-
-```{r MaxY.bleach.3c, fig.width=7, fig.height=4}
-
-# Fit mixed model with fixed effects of Species and proportion clade D and duration
-maxybleach.m <- lmer(MaxY.bleach ~ PropD.bleach * Species * BleachLvl + (1|Colony),
-                     data=bleach3c)
-select <- lmerTest::step(maxybleach.m)$model
-maxybleach.m <- lmer(formula(select), data=bleach3c)
-anova(maxybleach.m)
-
-# Calculate mean Fv/Fm for each species at PropD=0 and BleachLvl=Med
-maxybleach.0.lsm <- lsmeans(maxybleach.m, "Species", 
-                          at=list(PropD.bleach=0, BleachLvl="Med"))  
-cld(maxybleach.0.lsm) # View lsmean comparisons
-plot(maxybleach.0.lsm, main="Bleached Fv/Fm with 0% clade D", horizontal=F)
-maxybleach.0.summ <- summary(maxybleach.0.lsm)
-
-# look at slopes and 100% clade D Fv/Fm
-maxybleach.1.lsm <- lsmeans(maxybleach.m, "Species", 
-                          at=list(PropD.bleach=1, BleachLvl="Med"))  
-cld(maxybleach.1.lsm) # View lsmean comparisons
-plot(maxybleach.1.lsm, main="Bleached Fv/Fm with 100% clade D", horizontal=F)
-maxybleach.1.summ <- summary(maxybleach.1.lsm)
-
-# Test differences in slopes
-maxybleach.lst <- lstrends(maxybleach.m, specs="Species", var="PropD.bleach")
-cld(maxybleach.lst) # Slopes of fit for each species
-#plot(Effect(c("PropD.bleach", "Species"), maxybleach.m))  # Plot model fit
-```  
-
-* With no clade D, *O. faveolata* maintained significantly higher Fv/Fm (`r maxybleach.0.summ$lsmean[1]`±`r maxybleach.0.summ$SE[1]`) than *S. siderea*, while *M. cavernosa* was also lower but not significantly different.
-* *O. faveolata* and *S. siderea* with 100% clade D had the same Fv/Fm (0.31) under heat stress, while *M. cavernosa* with clade D had a significantly higher Fv/Fm (0.38). 
-* As the proportion of clade D went down, Fv/Fm went down > 3 times faster in *S. siderea* and almost 5 times faster in *M. cavernosa* compa#d95f02 to *O. faveolata*, suggesting their other symbionts differ in thermal sensitivity.
-
-
-
-```{r, eval=T}
 # Melt data frame so that "time" (i.e., initial vs. bleached) can be used as factor
 bleachmelt <- melt(bleach3c, id.vars = c("Species", "Colony", "Core", "BleachLvl"))
 bleachmelt <- cbind(bleachmelt, 
@@ -139,8 +67,11 @@ bleachmelt <- cbind(bleachmelt,
 bleachdat <- dcast(bleachmelt, 
                    formula = Species + Colony + Core + BleachLvl + time ~ resp, value.var="value")
 bleachdat$time <- factor(bleachdat$time)
+```
 
-# Test of slopes of FvFm ~ PropD are different for different BleachLvls
+# Analyze photochemical efficiency (Fv/Fm)
+```{r analyze_fvfm}
+# Test of slopes of bleached FvFm ~ PropD are different for different BleachLvls
 testmod <- lmer(MaxY ~ PropD * Species * BleachLvl + (1|Colony), 
                 data=subset(bleachdat, time=="bleach" & Species!="Mc"))
 anova(testmod)
@@ -177,6 +108,7 @@ pred$lci <- apply(bootfit$t, 2, quantile, 0.05)
 pred$uci <- apply(bootfit$t, 2, quantile, 0.95)
 ```
 
+## Plot Figure 1
 ```{r Fig1}
 png("figures/Fig1.png", width=4, height=2.5, units="in", res=300)
 par(mfrow=c(1, 3), mar=c(3,3,1.1,0), mgp=c(1.5, 0.1, 0), 
@@ -220,7 +152,7 @@ with(subset(pred, Species=="Mc" & time=="bleach"), {
 })
 dev.off()
 ```
-![Figure 1.](../figures/Fig1.png)
+![Figure 1. Photochemical efficiency as a function of the proportion of clade D *Symbiodinium*. Solid lines represent ambient conditions, and dotted lines represent the relationship under heat stress (32°C). Shaded regions represent 90% confidence intervals around fitted values.](../figures/Fig1.png)
 
 
 ```{r Fig2}
@@ -253,17 +185,17 @@ mtext(side=2, "Photochemical advantage of clade D",
 abline(h=0)
 dev.off()
 ```
-![Figure 2](../figures/Fig2.png)
+![Figure 2. Photochemical advantage of clade D symbionts in each coral species under ambient conditions (darker bars) and under heat stress (lighter bars). Values indicate the difference in Fv/Fm of corals with all and no clade D symbionts (i.e., slopes of the lines in Fig. 1), with error bars indicating 95% confidence intervals.](../figures/Fig2.png)
 
 
 # Symbiont shuffling after bleaching
-```{r}
+```{r analyze_symshuff}
 recovdat <- rbind(SsOf, Mc)[, c("Species", "Colony", "Core", "Total.init", "PropD.init", "MaxY.init", "BleachLvl", "RecovTemp", "Total.recov", "PropD.recov", "MaxY.recov")]
 
 propDmod <- glm(PropD.recov ~ PropD.init + Species*BleachLvl*RecovTemp,
                  data=recovdat, family=quasibinomial)
 summary(propDmod)  # Model summary
-dropterm(propDmod, test="F")  # Partial F-tests: Results in Table 1
+dropterm(propDmod, test="F")  # Partial F-tests
 
 # Get fitted values for PropD.recov, averaging across RecovTemp levels
 eff <- effect(c("PropD.init", "Species", "BleachLvl"), propDmod, 
@@ -378,12 +310,7 @@ text(par("usr")[2]*0.95, c(0.08, -0.1), pos=2, cex=0.7,
 mtext("B.", adj=-0.2, font=2)
 dev.off()
 ```
-![Figure 3.](../figures/Fig3.png)
-
-
-
-
-
+![Figure 3. Symbiont shuffling in three coral species. Panel **(A)** shows the proportion of clade D *Symbiodinium* before bleaching and after recovery, with the diagonal line of identity representing no change in symbiont proportions. Fitted values for each species (indicated by color) and heat stress duration (indicated by line type) are plotted with shaded areas representing 95% confidence intervals. Panel **(B)** shows the integrated symbiont shuffling response (from before bleaching to after recovery) for each species and bleaching treatment, calculated as the area above or below the diagonal line of identity, normalized to a range of -1 (i.e., a complete loss of clade D symbionts) to +1 (i.e., complete dominance by clade D symbionts).](../figures/Fig3.png)
 
 ```{r Fig4}
 
@@ -448,6 +375,8 @@ glmod2 <- glm(shuffle.scaled ~ ADH.days, family="quasibinomial", data=df)
 predicted <- predict(glmod2, 
                      newdata=data.frame(ADH.days=seq(0,3,0.1)), 
                      type="response")
+with(summary(glmod2), 1-(deviance(glmod2)/null.deviance))
+
 plot(df$shuffle ~ df$ADH.days, ylim=c(-1,1), yaxs="r", xpd=NA,
      pch=c(16,15,17)[as.numeric(as.factor(df$BleachLvl))],
      xlab=expression("A"["Heat"]^"D"~"x (Days of heat stress)"),
@@ -466,100 +395,4 @@ legend("bottomright", bty="n", inset=c(0.05, 0.1),
        legend=c("7 days", "10 days", "14 days"))
 dev.off()
 ```
-![Figure 4.](../figures/Fig4.png)
-
-# Analyze data using initial *M. cavernosa* bleaching experiment
-# Analyze photochemical efficiency (Fv/Fm)
-
-### Initial Fv/Fm before stress
-```{r MaxY.init, fig.width=7, fig.height=4}
-
-# Plot Fv/Fm vs. PropD by Species
-xyplot(MaxY.init ~ PropD.init | Species, alldata, 
-       main="Initial Fv/Fm by species",
-       xlab="Initial proportion clade D", ylab="Initial Fv/Fm")  
-
-# Fit mixed model with fixed effects of Species and proportion clade D
-maxyinit.m <- lmer(MaxY.init ~ PropD.init * Species + (1|Colony),
-                   data=alldata) 
-anova(maxyinit.m)  # Assess significance of Species
-
-# Calculate mean Fv/Fm for each species at PropD=0 w/ pairwise comparisons
-maxyinit.lsm <- lsmeans(maxyinit.m, "Species", at=list(PropD.init=0))  
-cld(maxyinit.lsm) # View lsmean comparisons
-plot(maxyinit.lsm, main="Initial Fv/Fm with no clade D", horizontal=F)
-
-# Effect of proportion clade D on initial Fv/Fm
-## (Excludes *M. cavernosa*, which did not host clade D before stress)
-
-# Look at distribution of PropD within each colony
-#histogram(~ PropD.init | Colony, data=subset(alldata, Species!="Mc"))
-# Not enough variation in PropD within colonies to be able to use random slopes
-
-# Fit mixed model with fixed effect of Species and PropD, random effect of Colony
-maxyinit.m2 <- lmer(MaxY.init ~ PropD.init * Species + (1|Colony),
-                    data=subset(alldata, Species!="Mc"))
-anova(maxyinit.m2)  # Assess significance of species and propD interaction
-maxyinit.m2.lst <- lstrends(maxyinit.m2, specs="Species", var="PropD.init")
-cld(maxyinit.m2.lst) # Slopes of fit for each species
-plot(Effect(c("PropD.init", "Species"), maxyinit.m2))  # Plot model fit
-
-# Difference in Fv/Fm between Ofav and Ssid with 100% clade D?
-maxyinit.lsm <- lsmeans(maxyinit.m2, "Species", at=list(PropD.init=1))
-cld(maxyinit.lsm)
-plot(maxyinit.lsm, main="Initial Fv/Fm with 100% clade D", horizontal=F)
-```
-
-* Higher amounts of clade D #d95f02uce Fv/Fm, with this effect being stronger in *O. faveolata* compa#d95f02 to *S. siderea*. However, Fv/Fm with 100% D is similar in both species, indicating that it is the higher Fv/Fm of the non-clade-D symbiont of *O. faveolata* that is driving this trend.
-
-
-### Fv/Fm after heat stress
-```{r, fig.width=7, fig.height=4}
-
-# Subset corals bleached by heat
-## Corals bleached by heat for 10 days only
-heat10day <- subset(alldata, BleachLvl=="Med" | BleachLvl=="Heat")
-## All corals bleached by heat (7, 10, and 14 days for Ofav and Ssid)
-heatbleach <- subset(alldata, !BleachLvl %in% c("DCMU", "Control"))
-## Set BleachLvl for heated Mcav to "Med" (=10 days of heat) to match Ofav and Ssid
-heatbleach[heatbleach$Species=="Mc", "BleachLvl"] <- "Med"  
-
-# Plot bleached Fv/Fm vs. bleached proportion clade D by species
-xyplot(MaxY.bleach ~ PropD.bleach | Species, data=heatbleach)
-
-# Look at distribution of PropD after bleaching within each colony
-# histogram(~ PropD.bleach | Colony, data=heatbleach)
-## Many colonies do not have a good spread of proportion clade D. Therefore, allowing random slopes for each colony when modeling responses as a function of proportion clade D will give very high variance (i.e., there is not enough data to constrain slopes within colonies). Therefore, we will model responses with random intercepts only.
-
-# Fit mixed model with fixed effects of Species and proportion clade D and duration
-maxybleach.m <- lmer(MaxY.bleach ~ PropD.bleach * Species * BleachLvl + (1|Colony),
-                     data=heatbleach)
-select <- lmerTest::step(maxybleach.m)$model
-maxybleach.m <- lmer(formula(select), data=heatbleach)
-anova(maxybleach.m)
-## Not there is NO significant interaction between PropD and BleachLvl, indicating that the duration of heat stress did not influence the relationship between PropD and Fv/Fm. Therefore, we can use data from all three BleachLvl's (for Ofav and Ssid) to compare the effect of PropD on Fv/Fm among species.
-
-# Calculate mean Fv/Fm for each species at PropD=0 and BleachLvl=Med
-maxybleach.0.lsm <- lsmeans(maxybleach.m, "Species", 
-                          at=list(PropD.bleach=0, BleachLvl="Med"))  
-cld(maxybleach.0.lsm) # View lsmean comparisons
-plot(maxybleach.0.lsm, main="Bleached Fv/Fm with 0% clade D", horizontal=F)
-maxybleach.0.summ <- summary(maxybleach.0.lsm)
-
-# Re-fit model excluding Mcav to look at slopes and 100% clade D Fv/Fm
-maxybleach.m.noMc <- update(maxybleach.m, data=subset(heatbleach, Species!="Mc"))
-
-maxybleach.1.lsm <- lsmeans(maxybleach.m.noMc, "Species", 
-                          at=list(PropD.bleach=1, BleachLvl="Med"))  
-cld(maxybleach.1.lsm) # View lsmean comparisons
-plot(maxybleach.1.lsm, main="Bleached Fv/Fm with 100% clade D", horizontal=F)
-maxybleach.1.summ <- summary(maxybleach.1.lsm)
-
-# Test differences in slopes
-maxybleach.lst <- lstrends(maxybleach.m.noMc, specs="Species", var="PropD.bleach")
-cld(maxybleach.lst) # Slopes of fit for each species
-plot(Effect(c("PropD.bleach", "Species"), maxybleach.m.noMc))  # Plot model fit
-```  
-
-* With no clade D, *O. faveolata* maintained significantly higher Fv/Fm (`r maxybleach.0.summ$lsmean[1]`±`r maxybleach.0.summ$SE[1]`) than the other two species under heat stress.
-* *O. faveolata* and *S. siderea* with 100% clade D had the same Fv/Fm (0.31) under heat stress, suggesting that clade D performs the same in both host species under stress. As the proportion of clade D went down, Fv/Fm went down > 3 times faster in *S. siderea* compa#d95f02 to *O. faveolata*, suggesting their other symbionts differ in thermal sensitivity (*M. cavernosa* still did not have clade D at this point).
+![Figure 4. Symbiont shuffling as a function of the photochemical advantage of clade D and heat stress duration. Panel **(A)** shows the symbiont shuffling response (as in Fig. 3B) as a function of heat stress duration (days) and the photochemical advantage of clade D under heat stress (A^D^~Heat~), with lines corresponding to the A^D^~Heat~ values for the three coral species studied (indicated by color), and two hypothetical intermediate values (gray lines). Panel **(B)** shows that the symbiont shuffling responses observed across all three species are predicted well (psuedo-R^2^=0.93) by the time-integrated photochemical advantage of clade D under heat stress.](../figures/Fig4.png)
