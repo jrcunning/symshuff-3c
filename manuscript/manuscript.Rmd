@@ -1,0 +1,11 @@
+---
+title: Symbiont shuffling linked to differential photochemical efficiency of *Symbiodinium* in three Caribbean reef corals
+author: "Ross Cunning"
+date: "6/7/2017"
+output: html_document
+---
+
+Title ideas:
+
+Symbiont shuffling linked to differential photochemical efficiency of *Symbiodinium* in three Caribbean reef corals
+
