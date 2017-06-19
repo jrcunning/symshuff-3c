@@ -85,14 +85,9 @@ bleachmod <- lmer(MaxY ~ PropD * time * Species + (1|Colony), bleachdat)
 anova(bleachmod)
 select <- lmerTest::step(bleachmod)$model
 bleachmod <- lmer(formula(select), data=bleachdat)
-anova(bleachmod)
+lmerTest::anova(bleachmod)
 
 plot(Effect(c("PropD", "time", "Species"), bleachmod), multiline=T, ci.style="bands")
-
-# Compare slopes of Fv/Fm vs. PropD among species by time
-lst <- lstrends(bleachmod, specs=c("Species", "time"), var="PropD")
-cld(contrast(lst, by="time"))
-plot(lst, horizontal=F)
 
 # Make data frame to collect fitted values and confidence intervals
 pred <- expand.grid(Species=c("Of", "Ss", "Mc"), 
@@ -156,6 +151,14 @@ dev.off()
 
 
 ```{r Fig2}
+
+# Compare slopes of Fv/Fm vs. PropD among species by time
+lst <- lstrends(bleachmod, specs=c("Species", "time"), var="PropD")
+lst.pw <- summary(contrast(lst, "pairwise", by="time"))
+l <- cld(contrast(lst), Letters=c("abcdefg"))
+grps <- matrix(t(matrix(l$.group, ncol=2)))
+grps <- stringr::str_trim(grps)
+
 # Plot Advantage of D vs. other symbiont in each coral under
 # normal conditions and under heat stress (in Fv/Fm units)
 
@@ -178,6 +181,9 @@ arrows(matrix(bars), matrix(ADl), matrix(bars), matrix(ADu),
        length = 0.05, lwd=1, xpd=NA, code=3, angle=90)
 mtext(side=2, "Photochemical advantage of clade D", 
       line=1.5, cex=0.8)
+l.pos <- ifelse(sign(matrix(ADf))==-1,
+                matrix(ADl)-.01, matrix(ADu)+.01)
+text(bars, l.pos, grps, xpd=NA, cex=0.6)
 #legend("topleft", pch=22, pt.bg=c("gray80", "gray20"), y.intersp=1.2,
 #       pt.cex=2, cex=0.6, inset=c(0.02, -0.05), xpd=NA, bty = "n", 
 #       legend = c(expression("Heat stress"~"(A"["Heat"]^"D"~")"),
@@ -344,8 +350,8 @@ glmod <- glm(shuffle.scaled ~ ADH + days, data=df, family="quasibinomial")
 anova(glmod, test="F")
 
 # Get fitted values and plot shuffling ~ days for different relative advantages of D
-stresslevs <- c(0.033, 0.05, 0.07, 0.103, 0.163)
-cols <- c("#1b9e77", "gray40", "gray40", "#7570b3", "#d95f02")
+stresslevs <- c(0.01, 0.033, 0.05, 0.07, 0.103, 0.163)
+cols <- c("gray40", "#1b9e77", "gray40", "gray40", "#7570b3", "#d95f02")
 resdf <- expand.grid(days=7:14, ADH=stresslevs)
 resdf$fit <- predict(glmod, newdata=resdf, type="response")
 resdf$fit.bt <- rescale(resdf$fit, from=c(0,1), to=c(-1,1))
