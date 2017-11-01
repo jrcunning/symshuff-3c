@@ -1,5 +1,5 @@
 ---
-title: "Symbiont shuffling linked to differential photochemical efficiency of *Symbiodinium* in three Caribbean reef corals"
+title: "Symbiont shuffling linked to differential photochemical dynamics of *Symbiodinium* in three Caribbean reef corals"
 output: html_document
 ---
 
@@ -51,7 +51,7 @@ Mc$PropD.bleach <- Mc$PropD.bleach2
 Mc$MaxY.bleach <- Mc$MaxY.bleach2
 ## Set BleachLvl to "Med" to match Ofav and Ssid factor level
 Mc$BleachLvl[Mc$BleachLvl=="Heat"] <- "Med"
-## Set data after second recovery to the "recove#d95f02" factor levels
+## Set data after second recovery to the "recovered" factor levels
 Mc$PropD.recov <- Mc$PropD.recov2
 Mc$MaxY.recov <- Mc$MaxY.recov2
 
@@ -149,7 +149,7 @@ dev.off()
 ```
 ![Figure 1. Photochemical efficiency as a function of the proportion of clade D *Symbiodinium*. Solid lines represent ambient conditions, and dotted lines represent the relationship under heat stress (32°C). Shaded regions represent 90% confidence intervals around fitted values.](../figures/Fig1.png)
 
-
+## Plot Figure 2
 ```{r Fig2}
 
 # Compare slopes of Fv/Fm vs. PropD among species by time
@@ -221,6 +221,7 @@ auc <- aggregate(res[, c("fit", "lower", "upper")],
 auc.list <- split(auc, list(auc$BleachLvl))
 ```
 
+## Plot Figure 3
 ```{r Fig3}
 # Figure 3
 png("figures/Fig3.png", width=7, height=3.5, units="in", res=300)
@@ -318,6 +319,8 @@ dev.off()
 ```
 ![Figure 3. Symbiont shuffling in three coral species. Panel **(A)** shows the proportion of clade D *Symbiodinium* before bleaching and after recovery, with the diagonal line of identity representing no change in symbiont proportions. Fitted values for each species (indicated by color) and heat stress duration (indicated by line type) are plotted with shaded areas representing 95% confidence intervals. Panel **(B)** shows the integrated symbiont shuffling response (from before bleaching to after recovery) for each species and bleaching treatment, calculated as the area above or below the diagonal line of identity, normalized to a range of -1 (i.e., a complete loss of clade D symbionts) to +1 (i.e., complete dominance by clade D symbionts).](../figures/Fig3.png)
 
+
+## Plot Figure 4
 ```{r Fig4}
 
 # Model shuffling as a function of photochemical advantage and heat stress
@@ -341,7 +344,6 @@ df$ADH.days <- df$ADH * df$days
 df$ADA.days <- df$ADA * df$days
 
 # Predict shuffling response based on relative Fv/Fm value and BleachLvl
-## relative Fv/Fm at ambient temperatures ("normal") is perfectly correlated with relative Fv/Fm at stress temperatures ("stress") so only one variable can be used in model.  Or, should the slope of the Fv/Fm line be used, rather than the "relative difference"? (makes very little difference whether relative or slope is used.) *slope needs to be used because relative is different for diff BleachLvl levels, but slope is the same!
 
 png("figures/Fig4.png", width=7, height=3.5, units="in", res=300)
 par(mfrow=c(1,2), mgp=c(1.5,0.1,0), mar=c(3,3,1,1), tcl=0.2, cex.axis=0.8)
