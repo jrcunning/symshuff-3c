@@ -2,7 +2,8 @@ This repository contains code to accompany the manuscript titled
 
 ### Symbiont shuffling linked to differential photochemical dynamics of *Symbiodinium* in three Caribbean reef corals
 
-by **Ross Cunning, Rachel N. Silverstein, and Andrew C. Baker**
+by **Ross Cunning, Rachel N. Silverstein, and Andrew C. Baker**  
+in *Coral Reefs* (doi: [10.1007/s00338-017-1640-3](http://dx.doi.org/10.1007/s00338-017-1640-3))
 
 In this manuscript, we describe changes in *Symbiodinium* community structure ('symbiont shuffling') in three corals during experimental thermal bleaching and recovery. We demonstrate that the magnitude of shuffling can be predicted by the relative difference in photochemical efficiency of co-occurring symbionts under stress, and the duration of thermal stress applied.
 
