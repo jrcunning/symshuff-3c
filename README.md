@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1044368.svg)](https://doi.org/10.5281/zenodo.1044368)
+
 This repository contains code to accompany the manuscript titled
 
 ### Symbiont shuffling linked to differential photochemical dynamics of *Symbiodinium* in three Caribbean reef corals
